@@ -3,7 +3,7 @@ using Asscii.Input;
 using Asscii.Graphics;
 using Asscii.Game;
 
-namespace Asscii
+namespace ExampleProject
 {
     static class Sprites
     {
@@ -122,7 +122,7 @@ namespace Asscii
 
     class Scene1 : GameScene
     {
-        public Scene1(short width, short height, short fps) : base(width, height, fps) {}
+        public Scene1(short width, short height, short fps) : base(width, height, fps) { }
 
         public override void Init()
         {
