@@ -20,8 +20,7 @@
         [System.Runtime.InteropServices.DllImport("user32.dll")]
         private static extern short GetKeyState(int key);
 
-        public static bool IsPressed(Key key)
-        {
+        public static bool IsPressed(Key key) {
             return (GetKeyState((int)key) & 0x8000) != 0;
         }
     }

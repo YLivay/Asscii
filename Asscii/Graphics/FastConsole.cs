@@ -38,8 +38,7 @@ namespace Asscii.Graphics
             public short X;
             public short Y;
 
-            public Coord(short X, short Y)
-            {
+            public Coord(short X, short Y) {
                 this.X = X;
                 this.Y = Y;
             }
@@ -58,7 +57,7 @@ namespace Asscii.Graphics
         public struct CharInfo
         {
             [FieldOffset(0)]
-            private CharUnion ch;
+            private CharUnion _ch;
             [FieldOffset(2)]
             public short Attributes;
 
@@ -90,32 +89,27 @@ namespace Asscii.Graphics
 
             public CharInfo(char ch, ConsoleColor fg, ConsoleColor bg) : this(new CharUnion { UnicodeChar = ch }, fg, bg) { }
             public CharInfo(byte ch, ConsoleColor fg, ConsoleColor bg) : this(new CharUnion { AsciiChar = ch }, fg, bg) { }
-            private CharInfo(CharUnion ch, ConsoleColor fg, ConsoleColor bg)
-            {
-                this.ch = ch;
+            private CharInfo(CharUnion ch, ConsoleColor fg, ConsoleColor bg) {
+                _ch = ch;
                 Attributes = 0;
                 ForegroundColor = fg;
                 BackgroundColor = bg;
             }
 
-            public byte AsciiChar
-            {
-                get { return ch.AsciiChar; }
+            public byte AsciiChar {
+                get { return _ch.AsciiChar; }
             }
 
-            public char UnicodeChar
-            {
-                get { return ch.UnicodeChar; }
+            public char UnicodeChar {
+                get { return _ch.UnicodeChar; }
             }
 
-            public ConsoleColor ForegroundColor
-            {
+            public ConsoleColor ForegroundColor {
                 get { return Attribute2Color[(short)(Attributes & 0x0f)]; }
                 set { Attributes |= Color2Attribute[value]; }
             }
 
-            public ConsoleColor BackgroundColor
-            {
+            public ConsoleColor BackgroundColor {
                 get { return Attribute2Color[(short)((Attributes & 0xf0) >> 4)]; }
                 set { Attributes |= (short)(Color2Attribute[value] << 4); }
             }
@@ -130,79 +124,68 @@ namespace Asscii.Graphics
             public short Bottom;
         }
 
-        private static SafeFileHandle h;
+        private static SafeFileHandle _h;
 
-        public static void Init()
-        {
-            if (h != null && !h.IsInvalid && !h.IsClosed)
+        public static void Init() {
+            if (_h != null && !_h.IsInvalid && !_h.IsClosed)
                 return;
 
-            h = CreateFile("CONOUT$", 0x40000000, 2, IntPtr.Zero, FileMode.Open, 0, IntPtr.Zero);
-            if (h.IsInvalid)
+            _h = CreateFile("CONOUT$", 0x40000000, 2, IntPtr.Zero, FileMode.Open, 0, IntPtr.Zero);
+            if (_h.IsInvalid)
                 throw new Exception("Failed to get handle to the console buffer");
         }
 
-        public Array2D<CharInfo> Buffer
-        {
+        public Array2D<CharInfo> Buffer {
             get;
             private set;
         }
 
-        public int?[] DepthMap
-        {
+        public int?[] DepthMap {
             get;
             private set;
         }
 
-        private Coord size;
-        private Coord pos;
-        private readonly Coord origin = new Coord { X = 0, Y = 0 };
+        private Coord _size;
+        private Coord _pos;
+        private readonly Coord _origin = new Coord { X = 0, Y = 0 };
 
         public FastConsole() : this((short)Console.WindowWidth, (short)Console.WindowHeight) { }
         public FastConsole(short width, short height) : this(width, height, 0, 0) { }
-        public FastConsole(short width, short height, short x, short y)
-        {
+        public FastConsole(short width, short height, short x, short y) {
             Init();
             Buffer = new Array2D<CharInfo>(width, height);
             DepthMap = new int?[width * height];
-            size = new Coord() { X = width, Y = height };
-            pos = new Coord() { X = x, Y = y };
+            _size = new Coord() { X = width, Y = height };
+            _pos = new Coord() { X = x, Y = y };
         }
 
-        public short X
-        {
-            get { return pos.X; }
-            set { pos.X = value; }
+        public short X {
+            get { return _pos.X; }
+            set { _pos.X = value; }
         }
 
-        public short Y
-        {
-            get { return pos.Y; }
-            set { pos.Y = value; }
+        public short Y {
+            get { return _pos.Y; }
+            set { _pos.Y = value; }
         }
 
-        public short Width
-        {
-            get { return size.X; }
+        public short Width {
+            get { return _size.X; }
         }
 
-        public short Height
-        {
-            get { return size.Y; }
+        public short Height {
+            get { return _size.Y; }
         }
 
-        public void Write(short x, short y, int depth, string str)
-        {
+        public void Write(short x, short y, int depth, string str) {
             if (x + str.Length < 0 || x >= Width || y < 0 || y >= Height)
                 return;
 
             str = str.Substring(Math.Max(-str.Length, 0));
             short px = Math.Max(x, (short)0);
-            foreach (char ch in str)
-            {
+            foreach (var ch in str) {
                 int depthIdx = px + y * Buffer.Width;
-                if (!DepthMap[depthIdx].HasValue || DepthMap[depthIdx] >= depth)
-                {
+                if (!DepthMap[depthIdx].HasValue || DepthMap[depthIdx] >= depth) {
                     Buffer[px, y] = new CharInfo(Charset.Chars[ch], ConsoleColor.White, ConsoleColor.Black);
                     DepthMap[depthIdx] = depth;
                 }
@@ -213,11 +196,10 @@ namespace Asscii.Graphics
             }
         }
 
-        public void Render()
-        {
-            SmallRect rect = new SmallRect { Left = pos.X, Top = pos.Y, Right = (short)(pos.X + size.X), Bottom = (short)(pos.Y + size.Y) };
-            WriteConsoleOutput(h, Buffer.Raw, size, origin, ref rect);
-            Buffer = new Array2D<CharInfo>(size.X, size.Y);
+        public void Render() {
+            var rect = new SmallRect { Left = _pos.X, Top = _pos.Y, Right = (short)(_pos.X + _size.X), Bottom = (short)(_pos.Y + _size.Y) };
+            WriteConsoleOutput(_h, Buffer.Raw, _size, _origin, ref rect);
+            Buffer = new Array2D<CharInfo>(_size.X, _size.Y);
             Array.Clear(DepthMap, 0, DepthMap.Length);
         }
     }

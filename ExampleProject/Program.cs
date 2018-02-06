@@ -24,51 +24,41 @@ namespace ExampleProject
         double SpeedX;
         double SpeedY;
 
-        public override void Created()
-        {
+        public override void Created() {
             Animation = Animations.Player;
             SpeedX = 0;
             SpeedY = 0;
         }
 
-        public override void Update(double deltaTime)
-        {
+        public override void Update(double deltaTime) {
             bool moved = false;
-            if (Keyboard.IsPressed(Key.Up))
-            {
+            if (Keyboard.IsPressed(Key.Up)) {
                 SpeedY -= Acceleration;
                 moved = true;
             }
-            if (Keyboard.IsPressed(Key.Right))
-            {
+            if (Keyboard.IsPressed(Key.Right)) {
                 SpeedX += Acceleration;
                 moved = true;
             }
-            if (Keyboard.IsPressed(Key.Left))
-            {
+            if (Keyboard.IsPressed(Key.Left)) {
                 SpeedX -= Acceleration;
                 moved = true;
             }
-            if (Keyboard.IsPressed(Key.Down))
-            {
+            if (Keyboard.IsPressed(Key.Down)) {
                 SpeedY += Acceleration;
                 moved = true;
             }
 
-            if (!moved)
-            {
+            if (!moved) {
                 double dist = Math.Sqrt(SpeedX * SpeedX + SpeedY * SpeedY);
-                if (dist != 0)
-                {
+                if (dist != 0) {
                     double diff = Math.Max(dist - Deacceleration, 0) / dist;
                     SpeedX *= diff;
                     SpeedY *= diff;
                 }
             }
-            else
-            {
-                while (Random.Next(0, 2) == 0)
-                {
+            else {
+                while (Random.Next(0, 2) == 0) {
                     GameObject particle = new PlayerRocketParticle();
                     particle.X = X + Random.Next(-1, 2);
                     particle.Y = Y + 4;
@@ -83,32 +73,28 @@ namespace ExampleProject
 
     class PlayerRocketParticle : GameObject
     {
-        public override void Created()
-        {
+        public override void Created() {
             Animation = Animations.CircleParticle;
             AnimationSpeed = 10;
             Depth = 1;
         }
 
-        public override void Update(double deltaTime)
-        {
+        public override void Update(double deltaTime) {
             base.Update(deltaTime);
 
-            if (AnimationFrame >= 10)
-            {
+            if (AnimationFrame >= 10) {
                 Remove();
                 return;
             }
 
-            X += (Random.NextDouble() - 0.5);
+            X += Random.NextDouble() - 0.5;
             Y += Random.NextDouble() * 0.3;
         }
     }
 
     class StatusBar : GameObject
     {
-        public override void Update(double deltaTime)
-        {
+        public override void Update(double deltaTime) {
             /*for (int i = 0; i < 8; i++)
             {
                 for (int j = 0; j < 32; j++)
@@ -124,8 +110,7 @@ namespace ExampleProject
     {
         public Scene1(short width, short height, short fps) : base(width, height, fps) { }
 
-        public override void Init()
-        {
+        public override void Init() {
             Add(new StatusBar());
             Add(new Player());
         }
@@ -134,8 +119,7 @@ namespace ExampleProject
     class Program
     {
 
-        static void Main(string[] args)
-        {
+        static void Main(string[] args) {
             // I want a game screen of 16:9, but the character dimensions in the console is 8x12 pixels.
             // This means i'd have to multiply the width of the "logical" game screen by 12/8 = 1.5 to get the correct visible screen size.
             // I went with 80x45 which gives me a nice round 120x45

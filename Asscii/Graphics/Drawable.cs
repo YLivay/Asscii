@@ -2,8 +2,8 @@
 {
     public abstract class Drawable
     {
-        public int PivotX;
-        public int PivotY;
+        public int PivotX { get; set; }
+        public int PivotY { get; set; }
         public int Width { get; protected set; }
         public int Height { get; protected set; }
 
