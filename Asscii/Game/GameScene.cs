@@ -6,6 +6,7 @@ using System.Threading;
 
 using Asscii.Graphics;
 using System.Collections.Concurrent;
+using System.Threading.Tasks;
 
 namespace Asscii.Game
 {
@@ -13,6 +14,7 @@ namespace Asscii.Game
     {
         private long _nextObjectId = 0;
         private ConcurrentDictionary<long, GameObject> _objects;
+        private ManualResetEvent _mre;
 
         public FastConsole Console { get; private set; }
         public short Width { get; private set; }
@@ -65,22 +67,35 @@ namespace Asscii.Game
             _frameSw = new Stopwatch();
             _frameSw.Start();
 
-            while (true) {
-                long elapsed = WaitForNextFrame();
+            _mre = new ManualResetEvent(false);
 
-                Update(elapsed);
-                Render();
+            Task.Run(async () => {
+                while (true) {
+                    var elapsed = await WaitForNextFrame();
+
+                    Update(elapsed);
+                    Render();
+                }
+            });
+
+            _mre.WaitOne();
+        }
+
+        public virtual void Exit() {
+            if (_mre != null) {
+                _mre.Set();
+                _mre.Close();
             }
         }
 
-        private long WaitForNextFrame() {
-            long elapsed = 0;
-            while (true) {
-                elapsed = _frameSw.ElapsedTicks + _carryOverFrameTime;
-                if (elapsed > TicksPerFrame)
-                    break;
+        private async Task<long> WaitForNextFrame() {
+            var elapsed = _frameSw.ElapsedTicks + _carryOverFrameTime;
+            if (elapsed < TicksPerFrame) {
+                var msPerFrame = 1000 / (double)Fps;
+                var waitFor = (int)(msPerFrame - _frameSw.ElapsedMilliseconds);
+                await Task.Delay(waitFor);
 
-                Thread.Sleep(0);
+                elapsed = TicksPerFrame;
             }
             _carryOverFrameTime = elapsed % TicksPerFrame;
             _frameSw.Restart();
