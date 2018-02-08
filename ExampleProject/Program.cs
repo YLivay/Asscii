@@ -19,8 +19,8 @@ namespace ExampleProject
 
     class Player : GameObject
     {
-        const double Acceleration = 0.1;
-        const double Deacceleration = 0.05;
+        const double Acceleration = 100;
+        const double Deacceleration = 30;
         double SpeedX;
         double SpeedY;
 
@@ -32,33 +32,37 @@ namespace ExampleProject
 
         public override void Update(double deltaTime) {
             bool moved = false;
+            double accel = Acceleration * deltaTime;
             if (Keyboard.IsPressed(Key.Up)) {
-                SpeedY -= Acceleration;
+                SpeedY -= accel;
                 moved = true;
             }
             if (Keyboard.IsPressed(Key.Right)) {
-                SpeedX += Acceleration;
+                SpeedX += accel;
                 moved = true;
             }
             if (Keyboard.IsPressed(Key.Left)) {
-                SpeedX -= Acceleration;
+                SpeedX -= accel;
                 moved = true;
             }
             if (Keyboard.IsPressed(Key.Down)) {
-                SpeedY += Acceleration;
+                SpeedY += accel;
                 moved = true;
             }
 
-            if (!moved) {
-                double dist = Math.Sqrt(SpeedX * SpeedX + SpeedY * SpeedY);
-                if (dist != 0) {
-                    double diff = Math.Max(dist - Deacceleration, 0) / dist;
-                    SpeedX *= diff;
-                    SpeedY *= diff;
-                }
+            double dist = Math.Sqrt(SpeedX * SpeedX + SpeedY * SpeedY);
+            if (dist <= Deacceleration * deltaTime) {
+                dist = 0;
+                SpeedX = 0;
+                SpeedY = 0;
+            } else {
+                double diff = Math.Max(dist - Deacceleration * deltaTime, 0) / dist;
+                SpeedX *= diff;
+                SpeedY *= diff;
             }
-            else {
-                while (Random.Next(0, 2) == 0) {
+            
+            if (dist != 0) {
+                for (int particles = Random.Next((int)(150 * deltaTime)); particles > 0; particles--) {
                     GameObject particle = new PlayerRocketParticle();
                     particle.X = X + Random.Next(-1, 2);
                     particle.Y = Y + 4;
@@ -66,8 +70,8 @@ namespace ExampleProject
                 }
             }
 
-            X += SpeedX;
-            Y += SpeedY;
+            X += SpeedX * deltaTime;
+            Y += SpeedY * deltaTime;
         }
     }
 
@@ -87,8 +91,8 @@ namespace ExampleProject
                 return;
             }
 
-            X += Random.NextDouble() - 0.5;
-            Y += Random.NextDouble() * 0.3;
+            X += (Random.NextDouble() - 0.5) * 3 * deltaTime;
+            Y += Random.NextDouble() * 15 * deltaTime;
         }
     }
 
@@ -102,7 +106,13 @@ namespace ExampleProject
                     Console.Buffer[j + 5, i + 5] = new FastConsole.CharInfo((byte)(i * 32 + j), ConsoleColor.White, ConsoleColor.Black);
                 }
             }*/
-            Console.Write(0, 0, -1, string.Format("Delta time: {0,7} FPS: {1,3}", deltaTime, Math.Round((double)System.Diagnostics.Stopwatch.Frequency / deltaTime)));
+            if (Keyboard.IsPressed(Key.Z)) {
+                Scene.FPS += 1;
+            }
+            else if (Keyboard.IsPressed(Key.X)) {
+                Scene.FPS -= 1;
+            }
+            Console.Write(0, 0, -1, string.Format("Delta time: {0,4} FPS: {1,3}", (int)(deltaTime * 1000), Math.Round(1 / deltaTime)));
         }
     }
 
@@ -123,7 +133,7 @@ namespace ExampleProject
             // I want a game screen of 16:9, but the character dimensions in the console is 8x12 pixels.
             // This means i'd have to multiply the width of the "logical" game screen by 12/8 = 1.5 to get the correct visible screen size.
             // I went with 80x45 which gives me a nice round 120x45
-            GameScene scene = new Scene1(120, 45, 30);
+            GameScene scene = new Scene1(120, 45, 60);
             scene.Loop();
         }
     }

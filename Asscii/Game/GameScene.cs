@@ -19,33 +19,25 @@ namespace Asscii.Game
         public FastConsole Console { get; private set; }
         public short Width { get; private set; }
         public short Height { get; private set; }
-        public short Fps { get; private set; }
-
-        public long TicksPerFrame {
-            get { return Stopwatch.Frequency / Fps; }
-        }
-
-        private long _carryOverFrameTime;
-        private Stopwatch _frameSw;
+        public float FPS { get; set; }
 
         public readonly Random Random = new Random();
 
         public GameScene(short width, short height, short fps) {
             Width = width;
             Height = height;
-            Fps = fps;
+            FPS = fps;
         }
 
         public virtual void Init() { }
 
-        public void Update(long deltaTime) {
+        protected virtual void Update(double deltaTime) {
             foreach (var obj in _objects.Values) {
-                // Add elapsed tick because the updates themselves may take time, and frameSw gets reset right before running the updates
-                obj.Update(deltaTime + _frameSw.ElapsedTicks);
+                obj.Update(deltaTime);
             }
         }
 
-        public void Render() {
+        protected virtual void Render() {
             foreach (var obj in _objects.Values) {
                 obj.Draw();
             }
@@ -63,17 +55,27 @@ namespace Asscii.Game
 
             Init();
 
-            _carryOverFrameTime = 0;
-            _frameSw = new Stopwatch();
-            _frameSw.Start();
-
             _mre = new ManualResetEvent(false);
 
-            Task.Run(async () => {
-                while (true) {
-                    var elapsed = await WaitForNextFrame();
+            Task.Run(() => {
+                var sw = new Stopwatch();
+                sw.Start();
 
-                    Update(elapsed);
+                long currentFrameTime = 0, lastFrameProcessingTime;
+
+                while (true) {
+                    lastFrameProcessingTime = sw.ElapsedMilliseconds;
+
+                    var msPerFrame = 1000.0 / FPS;
+                    var timeToWait = (int)(msPerFrame - lastFrameProcessingTime);
+                    if (timeToWait > 0) {
+                        Thread.Sleep(timeToWait);
+                    }
+
+                    currentFrameTime = sw.ElapsedMilliseconds;
+                    sw.Restart();
+
+                    Update(currentFrameTime / 1000.0);
                     Render();
                 }
             });
@@ -86,20 +88,6 @@ namespace Asscii.Game
                 _mre.Set();
                 _mre.Close();
             }
-        }
-
-        private async Task<long> WaitForNextFrame() {
-            var elapsed = _frameSw.ElapsedTicks + _carryOverFrameTime;
-            if (elapsed < TicksPerFrame) {
-                var msPerFrame = 1000 / (double)Fps;
-                var waitFor = (int)(msPerFrame - _frameSw.ElapsedMilliseconds);
-                await Task.Delay(waitFor);
-
-                elapsed = TicksPerFrame;
-            }
-            _carryOverFrameTime = elapsed % TicksPerFrame;
-            _frameSw.Restart();
-            return elapsed;
         }
 
         public long NextObjectID() {

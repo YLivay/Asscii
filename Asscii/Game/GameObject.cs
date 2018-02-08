@@ -1,6 +1,5 @@
 ﻿
 using System;
-using System.Diagnostics;
 
 using Asscii.Graphics;
 
@@ -53,7 +52,7 @@ namespace Asscii.Game
         public virtual void Removed() { }
 
         public virtual void Update(double deltaTime) {
-            AnimationFrame += AnimationSpeed * deltaTime / Stopwatch.Frequency;
+            AnimationFrame += AnimationSpeed * deltaTime;
             AnimationFrame %= Animation.Frames.Count;
         }
 
