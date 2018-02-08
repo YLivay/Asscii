@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Text;
-using System.Collections.Generic;
 using System.Threading;
 
 using Asscii.Graphics;
@@ -13,7 +12,7 @@ namespace Asscii.Game
     public abstract class GameScene
     {
         private long _nextObjectId = 0;
-        private ConcurrentDictionary<long, GameObject> _objects;
+        private ConcurrentDictionary<long, GameComponent> _components;
         private ManualResetEvent _mre;
 
         public FastConsole Console { get; private set; }
@@ -32,13 +31,13 @@ namespace Asscii.Game
         public virtual void Init() { }
 
         protected virtual void Update(double deltaTime) {
-            foreach (var obj in _objects.Values) {
+            foreach (var obj in _components.Values) {
                 obj.Update(deltaTime);
             }
         }
 
         protected virtual void Render() {
-            foreach (var obj in _objects.Values) {
+            foreach (var obj in _components.Values) {
                 obj.Draw();
             }
             Console.Render();
@@ -51,7 +50,7 @@ namespace Asscii.Game
             System.Console.SetBufferSize(Width, Height);
 
             Console = new FastConsole(Width, Height);
-            _objects = new ConcurrentDictionary<long, GameObject>();
+            _components = new ConcurrentDictionary<long, GameComponent>();
 
             Init();
 
@@ -94,18 +93,18 @@ namespace Asscii.Game
             return _nextObjectId++;
         }
 
-        public void Add(GameObject obj) {
+        public void Add(GameComponent obj) {
             if (obj.ID == -1)
                 obj.AddToScene(this);
             else {
-                _objects.TryAdd(obj.ID, obj);
+                _components.TryAdd(obj.ID, obj);
                 obj.Created();
             }
         }
 
-        public void Remove(GameObject obj) {
+        public void Remove(GameComponent obj) {
             if (obj.ID != -1) {
-                _objects.TryRemove(obj.ID, out obj);
+                _components.TryRemove(obj.ID, out obj);
                 obj.Removed();
             }
         }

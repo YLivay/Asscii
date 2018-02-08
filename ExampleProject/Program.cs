@@ -31,24 +31,15 @@ namespace ExampleProject
         }
 
         public override void Update(double deltaTime) {
-            bool moved = false;
             double accel = Acceleration * deltaTime;
-            if (Keyboard.IsPressed(Key.Up)) {
+            if (Keyboard.IsPressed(Key.Up))
                 SpeedY -= accel;
-                moved = true;
-            }
-            if (Keyboard.IsPressed(Key.Right)) {
+            if (Keyboard.IsPressed(Key.Right))
                 SpeedX += accel;
-                moved = true;
-            }
-            if (Keyboard.IsPressed(Key.Left)) {
+            if (Keyboard.IsPressed(Key.Left))
                 SpeedX -= accel;
-                moved = true;
-            }
-            if (Keyboard.IsPressed(Key.Down)) {
+            if (Keyboard.IsPressed(Key.Down))
                 SpeedY += accel;
-                moved = true;
-            }
 
             double dist = Math.Sqrt(SpeedX * SpeedX + SpeedY * SpeedY);
             if (dist <= Deacceleration * deltaTime) {
@@ -96,23 +87,20 @@ namespace ExampleProject
         }
     }
 
-    class StatusBar : GameObject
+    class StatusBar : GameComponent
     {
+        private double _deltaTime;
         public override void Update(double deltaTime) {
-            /*for (int i = 0; i < 8; i++)
-            {
-                for (int j = 0; j < 32; j++)
-                {
-                    Console.Buffer[j + 5, i + 5] = new FastConsole.CharInfo((byte)(i * 32 + j), ConsoleColor.White, ConsoleColor.Black);
-                }
-            }*/
-            if (Keyboard.IsPressed(Key.Z)) {
+            _deltaTime = deltaTime;
+
+            if (Keyboard.IsPressed(Key.X))
                 Scene.FPS += 1;
-            }
-            else if (Keyboard.IsPressed(Key.X)) {
+            else if (Keyboard.IsPressed(Key.Z))
                 Scene.FPS -= 1;
-            }
-            Console.Write(0, 0, -1, string.Format("Delta time: {0,4} FPS: {1,3}", (int)(deltaTime * 1000), Math.Round(1 / deltaTime)));
+        }
+
+        public override void Draw() {
+            Console.Write(0, 0, -1, string.Format("Delta time: {0,4} FPS: {1,3}", (int)(_deltaTime * 1000), Math.Round(1 / _deltaTime)));
         }
     }
 

@@ -1,6 +1,11 @@
 ﻿namespace Asscii.Graphics
 {
-    public abstract class Drawable
+    public interface IDrawable
+    {
+        void Draw(FastConsole console, int x, int y, int depth);
+    }
+
+    public abstract class Drawable : IDrawable
     {
         public int PivotX { get; set; }
         public int PivotY { get; set; }
