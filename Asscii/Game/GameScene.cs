@@ -44,7 +44,7 @@ namespace Asscii.Game
         }
 
         public void Loop() {
-            System.Console.OutputEncoding = Encoding.Default;
+            System.Console.OutputEncoding = Charset.Encoding;
             System.Console.CursorVisible = false;
             System.Console.SetWindowSize(Width, Height);
             System.Console.SetBufferSize(Width, Height);

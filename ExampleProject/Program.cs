@@ -7,20 +7,33 @@ namespace ExampleProject
 {
     static class Sprites
     {
-        public static readonly Sprite Player = Sprite.Load("Assets/player.ans");
-        public static readonly Sprite Colors = Sprite.Load("Assets/test.ans");
+        public static Sprite Player { get; private set; }
+        public static Sprite Colors { get; private set; }
+
+        public static void Init()
+        {
+            Player = Sprite.Load("Assets/player.ans");
+            Colors = Sprite.Load("Assets/test.ans");
+        }
     }
 
     static class Animations
     {
-        public static readonly Animation Player = Animation.FromSprite(Sprites.Player);
-        public static readonly Animation CircleParticle = Animation.Load("Assets", "circle_particle*.ans");
+        public static Animation Player { get; private set; }
+        public static Animation CircleParticle { get; private set; }
+
+        public static void Init()
+        {
+            Player = Animation.FromSprite(Sprites.Player);
+            CircleParticle = Animation.Load("Assets", "circle_particle*.ans");
+        }
     }
 
     class Player : GameObject
     {
-        const double Acceleration = 100;
-        const double Deacceleration = 30;
+        const double Acceleration = 50;
+        const double Gravity = 15;
+
         double SpeedX;
         double SpeedY;
 
@@ -32,27 +45,32 @@ namespace ExampleProject
 
         public override void Update(double deltaTime) {
             double accel = Acceleration * deltaTime;
-            if (Keyboard.IsPressed(Key.Up))
-                SpeedY -= accel;
-            if (Keyboard.IsPressed(Key.Right))
-                SpeedX += accel;
-            if (Keyboard.IsPressed(Key.Left))
-                SpeedX -= accel;
-            if (Keyboard.IsPressed(Key.Down))
-                SpeedY += accel;
+            bool thrusting = false;
 
-            double dist = Math.Sqrt(SpeedX * SpeedX + SpeedY * SpeedY);
-            if (dist <= Deacceleration * deltaTime) {
-                dist = 0;
-                SpeedX = 0;
-                SpeedY = 0;
-            } else {
-                double diff = Math.Max(dist - Deacceleration * deltaTime, 0) / dist;
-                SpeedX *= diff;
-                SpeedY *= diff;
+            if (Keyboard.IsPressed(Key.Up))
+            {
+                SpeedY -= accel;
+                thrusting = true;
             }
+            if (Keyboard.IsPressed(Key.Right))
+            {
+                SpeedX += accel;
+                thrusting = true;
+            }
+            if (Keyboard.IsPressed(Key.Left))
+            {
+                SpeedX -= accel;
+                thrusting = true;
+            }
+            if (Keyboard.IsPressed(Key.Down))
+            {
+                SpeedY += accel;
+                thrusting = true;
+            }
+
+            SpeedY += Gravity * deltaTime;
             
-            if (dist != 0) {
+            if (thrusting) {
                 for (int particles = Random.Next((int)(150 * deltaTime)); particles > 0; particles--) {
                     GameObject particle = new PlayerRocketParticle();
                     particle.X = X + Random.Next(-1, 2);
@@ -118,6 +136,9 @@ namespace ExampleProject
     {
 
         static void Main(string[] args) {
+            Sprites.Init();
+            Animations.Init();
+
             // I want a game screen of 16:9, but the character dimensions in the console is 8x12 pixels.
             // This means i'd have to multiply the width of the "logical" game screen by 12/8 = 1.5 to get the correct visible screen size.
             // I went with 80x45 which gives me a nice round 120x45

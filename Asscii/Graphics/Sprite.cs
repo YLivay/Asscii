@@ -53,7 +53,7 @@ namespace Asscii.Graphics
         // Found how these are parsed in this document: http://ascii-table.com/ansi-escape-sequences.php
         // So first mission is to parse these.
         public static Sprite Load(string filepath) {
-            var text = System.IO.File.ReadAllText(filepath, Encoding.Default).Replace("\r", "");
+            var text = System.IO.File.ReadAllText(filepath, Charset.Encoding).Replace("\r", "");
 
             // \x1B\x5B is an ansi escape code, after which comes some attribute modifications like color, bold, underline, blink etc.
             // Since these attributes are only cleared when set to something else, I first try and split the file into "draw steps" where each step is
